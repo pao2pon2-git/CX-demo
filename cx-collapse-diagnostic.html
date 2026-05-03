@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CX崩壊度診断｜あなたの会社のCXは何点？</title>
+<meta name="description" content="中小企業オーナーのための、5問でわかるCX（顧客体験）崩壊度診断。あなたの会社の顧客体験は健全か、それとも崩壊寸前か——3分でチェック。" />
+<meta property="og:title" content="CX崩壊度診断｜5問でわかる、あなたの会社の顧客体験リスク" />
+<meta property="og:description" content="3分・5問でわかる、CX崩壊度の無料診断ツール。" />
+<meta property="og:type" content="website" />
+<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg-0:#06060c;
+    --bg-1:#0d0d18;
+    --bg-2:#161628;
+    --line:#23233a;
+    --text:#eef0ff;
+    --muted:#8b8ba8;
+    --neon-cyan:#00ffd1;
+    --neon-pink:#ff2d75;
+    --neon-purple:#9d6bff;
+    --warn:#ffb547;
+    --danger:#ff4d6d;
+    --ok:#37e6a8;
+    --shadow-cyan:0 0 24px rgba(0,255,209,.35), 0 0 48px rgba(0,255,209,.15);
+    --shadow-pink:0 0 24px rgba(255,45,117,.35), 0 0 48px rgba(255,45,117,.15);
+    --font:"Helvetica Neue","Hiragino Sans","ヒラギノ角ゴシック","Yu Gothic","Meiryo",system-ui,sans-serif;
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:var(--font);
+    color:var(--text);
+    background:radial-gradient(1200px 800px at 20% -10%, rgba(157,107,255,.18), transparent 60%),
+               radial-gradient(900px 700px at 110% 20%, rgba(0,255,209,.12), transparent 60%),
+               radial-gradient(800px 600px at 50% 120%, rgba(255,45,117,.12), transparent 60%),
+               var(--bg-0);
+    min-height:100vh;
+    line-height:1.7;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+
+  /* Animated grid background */
+  body::before{
+    content:"";
+    position:fixed; inset:0;
+    background-image:
+      linear-gradient(rgba(0,255,209,.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,209,.04) 1px, transparent 1px);
+    background-size:48px 48px;
+    mask-image:radial-gradient(circle at center, black 30%, transparent 75%);
+    pointer-events:none; z-index:0;
+  }
+
+  .container{
+    position:relative; z-index:1;
+    max-width:880px;
+    margin:0 auto;
+    padding:32px 20px 80px;
+  }
+
+  .brand{
+    display:flex; align-items:center; gap:10px;
+    font-size:13px; letter-spacing:.18em; color:var(--muted);
+    text-transform:uppercase;
+  }
+  .brand .dot{
+    width:8px;height:8px;border-radius:50%;
+    background:var(--neon-cyan);
+    box-shadow:0 0 12px var(--neon-cyan);
+    animation:pulse 1.6s infinite;
+  }
+  @keyframes pulse{50%{opacity:.4}}
+
+  .screen{display:none; animation:fadeUp .5s ease both}
+  .screen.active{display:block}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+  /* ---------- Top Screen ---------- */
+  .hero{
+    margin-top:32px; padding:48px 36px;
+    background:linear-gradient(180deg, rgba(22,22,40,.85), rgba(13,13,24,.85));
+    border:1px solid var(--line);
+    border-radius:20px;
+    backdrop-filter:blur(8px);
+    position:relative; overflow:hidden;
+  }
+  .hero::after{
+    content:""; position:absolute; inset:-1px;
+    border-radius:20px; pointer-events:none;
+    background:linear-gradient(135deg, rgba(0,255,209,.4), transparent 30%, transparent 70%, rgba(255,45,117,.4));
+    -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor; mask-composite:exclude;
+    padding:1px;
+  }
+  .tag{
+    display:inline-block; padding:6px 12px;
+    font-size:11px; letter-spacing:.2em;
+    background:rgba(0,255,209,.08);
+    color:var(--neon-cyan);
+    border:1px solid rgba(0,255,209,.4);
+    border-radius:999px;
+  }
+  h1{
+    font-size:clamp(28px, 5vw, 44px);
+    line-height:1.25;
+    margin:18px 0 12px;
+    letter-spacing:.02em;
+  }
+  h1 .glitch{
+    background:linear-gradient(90deg, var(--neon-cyan), var(--neon-pink));
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    text-shadow:0 0 30px rgba(255,45,117,.25);
+  }
+  .lead{color:var(--muted); font-size:16px; max-width:620px}
+  .stats{display:flex; gap:24px; margin:28px 0 8px; flex-wrap:wrap}
+  .stat{
+    flex:1; min-width:140px;
+    padding:14px 16px;
+    background:rgba(255,255,255,.02);
+    border:1px solid var(--line);
+    border-radius:12px;
+  }
+  .stat .num{font-size:24px; font-weight:700; color:var(--neon-cyan)}
+  .stat .lbl{font-size:12px; color:var(--muted); letter-spacing:.05em}
+
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:10px;
+    padding:16px 28px; border-radius:12px;
+    font-weight:700; font-size:16px; letter-spacing:.05em;
+    border:none; cursor:pointer;
+    transition:transform .15s ease, box-shadow .2s ease, background .2s ease;
+    font-family:inherit;
+    text-decoration:none;
+  }
+  .btn-primary{
+    background:linear-gradient(135deg, var(--neon-cyan), #00b4ff);
+    color:#001218;
+    box-shadow:var(--shadow-cyan);
+  }
+  .btn-primary:hover{transform:translateY(-2px); box-shadow:0 0 32px rgba(0,255,209,.55)}
+  .btn-secondary{
+    background:transparent; color:var(--text);
+    border:1px solid var(--line);
+  }
+  .btn-secondary:hover{border-color:var(--neon-cyan); color:var(--neon-cyan)}
+  .btn-pink{
+    background:linear-gradient(135deg, var(--neon-pink), #b026ff);
+    color:#fff;
+    box-shadow:var(--shadow-pink);
+  }
+  .btn-pink:hover{transform:translateY(-2px); box-shadow:0 0 32px rgba(255,45,117,.55)}
+
+  .cta-row{display:flex; gap:12px; margin-top:24px; flex-wrap:wrap}
+  .meta{margin-top:14px; font-size:12px; color:var(--muted)}
+
+  .features{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:14px;
+    margin-top:32px;
+  }
+  .feature{
+    padding:18px;
+    background:rgba(22,22,40,.6);
+    border:1px solid var(--line);
+    border-radius:14px;
+  }
+  .feature .ic{font-size:22px; margin-bottom:6px}
+  .feature .ttl{font-weight:700; font-size:14px; margin-bottom:4px}
+  .feature .desc{font-size:12px; color:var(--muted); line-height:1.6}
+  @media(max-width:640px){
+    .features{grid-template-columns:1fr}
+    .hero{padding:32px 22px}
+  }
+
+  /* ---------- Question Screen ---------- */
+  .progress-wrap{margin-top:24px; margin-bottom:28px}
+  .progress-meta{display:flex; justify-content:space-between; font-size:12px; color:var(--muted); letter-spacing:.1em; margin-bottom:8px}
+  .progress-bar{height:6px; background:var(--bg-2); border-radius:99px; overflow:hidden; border:1px solid var(--line)}
+  .progress-fill{
+    height:100%; width:0;
+    background:linear-gradient(90deg, var(--neon-cyan), var(--neon-pink));
+    box-shadow:0 0 12px var(--neon-cyan);
+    transition:width .4s cubic-bezier(.4,0,.2,1);
+  }
+
+  .qcard{
+    padding:36px 32px;
+    background:linear-gradient(180deg, rgba(22,22,40,.8), rgba(13,13,24,.8));
+    border:1px solid var(--line);
+    border-radius:20px;
+  }
+  .qcat{
+    display:inline-block; padding:5px 12px;
+    font-size:11px; letter-spacing:.18em;
+    background:rgba(255,45,117,.08); color:var(--neon-pink);
+    border:1px solid rgba(255,45,117,.4); border-radius:999px;
+  }
+  .qtext{
+    font-size:clamp(20px, 3vw, 26px);
+    font-weight:700;
+    margin:18px 0 28px;
+    line-height:1.5;
+  }
+  .options{display:flex; flex-direction:column; gap:10px}
+  .opt{
+    display:flex; align-items:center; gap:14px;
+    padding:18px 20px;
+    background:rgba(255,255,255,.02);
+    border:1px solid var(--line);
+    border-radius:12px;
+    cursor:pointer;
+    transition:all .15s ease;
+    font-size:15px;
+    text-align:left;
+    color:var(--text);
+    font-family:inherit;
+  }
+  .opt:hover{border-color:var(--neon-cyan); background:rgba(0,255,209,.04); transform:translateX(4px)}
+  .opt.selected{border-color:var(--neon-cyan); background:rgba(0,255,209,.08); box-shadow:0 0 18px rgba(0,255,209,.2)}
+  .opt .pill{
+    flex-shrink:0; width:28px; height:28px; border-radius:8px;
+    display:flex; align-items:center; justify-content:center;
+    font-weight:700; font-size:12px;
+    background:var(--bg-2); color:var(--muted);
+    border:1px solid var(--line);
+  }
+  .opt.selected .pill{background:var(--neon-cyan); color:#001; border-color:var(--neon-cyan)}
+
+  .qnav{display:flex; justify-content:space-between; gap:12px; margin-top:24px}
+  @media(max-width:640px){
+    .qcard{padding:26px 20px}
+  }
+
+  /* ---------- Result Screen ---------- */
+  .result-hero{
+    padding:40px 32px;
+    background:linear-gradient(180deg, rgba(22,22,40,.85), rgba(13,13,24,.85));
+    border:1px solid var(--line);
+    border-radius:20px;
+    text-align:center;
+    position:relative; overflow:hidden;
+  }
+  .result-hero::before{
+    content:""; position:absolute; inset:0;
+    background:radial-gradient(circle at 50% 0%, rgba(0,255,209,.15), transparent 60%);
+    pointer-events:none;
+  }
+  .rank-label{font-size:12px; letter-spacing:.25em; color:var(--muted)}
+  .rank{
+    font-size:clamp(40px, 8vw, 64px);
+    font-weight:900;
+    margin:8px 0 4px;
+    letter-spacing:.04em;
+    background:linear-gradient(90deg, var(--neon-cyan), var(--neon-pink));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    filter:drop-shadow(0 0 24px rgba(0,255,209,.3));
+  }
+  .score-big{font-size:72px; font-weight:900; line-height:1; margin:18px 0 4px; letter-spacing:-.04em}
+  .score-unit{font-size:18px; color:var(--muted); margin-left:4px}
+  .score-bar{
+    height:10px; max-width:480px; margin:18px auto 12px;
+    background:var(--bg-2); border-radius:99px; overflow:hidden;
+    border:1px solid var(--line);
+    position:relative;
+  }
+  .score-bar::after{
+    content:""; position:absolute; inset:0;
+    background:linear-gradient(90deg,
+      var(--ok) 0%, var(--ok) 25%,
+      var(--warn) 25%, var(--warn) 50%,
+      #ff9550 50%, #ff9550 75%,
+      var(--danger) 75%, var(--danger) 100%);
+    opacity:.35;
+  }
+  .score-marker{
+    position:relative; height:10px;
+    margin:-10px auto 0; max-width:480px;
+  }
+  .score-marker .pin{
+    position:absolute; top:-3px; transform:translateX(-50%);
+    width:16px; height:16px; border-radius:50%;
+    background:#fff; border:3px solid var(--bg-0);
+    box-shadow:0 0 16px rgba(255,255,255,.6);
+    transition:left 1s cubic-bezier(.2,1,.3,1);
+  }
+  .scale-row{display:flex; justify-content:space-between; max-width:480px; margin:6px auto 0; font-size:11px; color:var(--muted); letter-spacing:.08em}
+
+  .verdict{margin-top:18px; font-size:15px; color:var(--text); max-width:600px; margin-left:auto; margin-right:auto}
+
+  .grid-2{display:grid; grid-template-columns:1.1fr 1fr; gap:18px; margin-top:24px}
+  @media(max-width:760px){.grid-2{grid-template-columns:1fr}}
+
+  .panel{
+    padding:24px; background:rgba(22,22,40,.7);
+    border:1px solid var(--line); border-radius:16px;
+  }
+  .panel h3{margin:0 0 4px; font-size:16px; letter-spacing:.04em}
+  .panel .sub{font-size:12px; color:var(--muted); margin-bottom:14px}
+
+  .chart-box{height:320px; position:relative}
+
+  .actions-list{margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:12px}
+  .action{
+    padding:14px 16px;
+    background:rgba(0,0,0,.25);
+    border:1px solid var(--line);
+    border-left:3px solid var(--neon-cyan);
+    border-radius:10px;
+  }
+  .action .num{font-size:11px; letter-spacing:.15em; color:var(--neon-cyan); font-weight:700}
+  .action .ttl{font-size:14px; font-weight:700; margin:2px 0 4px}
+  .action .desc{font-size:13px; color:var(--muted); line-height:1.6}
+  .action.warn{border-left-color:var(--warn)} .action.warn .num{color:var(--warn)}
+  .action.danger{border-left-color:var(--danger)} .action.danger .num{color:var(--danger)}
+
+  .share-row{display:flex; gap:10px; flex-wrap:wrap; margin-top:8px}
+  .share-btn{
+    flex:1; min-width:140px;
+    padding:12px 14px; border-radius:10px;
+    border:1px solid var(--line);
+    background:rgba(255,255,255,.02);
+    color:var(--text); font-size:13px; cursor:pointer;
+    text-align:center; text-decoration:none;
+    transition:all .15s ease;
+    font-family:inherit;
+    display:inline-flex; align-items:center; justify-content:center; gap:6px;
+  }
+  .share-btn:hover{border-color:var(--neon-cyan); color:var(--neon-cyan)}
+
+  .cta-final{
+    margin-top:24px; padding:28px;
+    background:linear-gradient(135deg, rgba(255,45,117,.12), rgba(157,107,255,.12));
+    border:1px solid rgba(255,45,117,.35);
+    border-radius:18px;
+    text-align:center;
+  }
+  .cta-final h3{margin:0 0 8px; font-size:20px}
+  .cta-final p{margin:0 0 16px; color:var(--muted); font-size:14px}
+
+  footer{
+    margin-top:48px; padding-top:24px;
+    border-top:1px solid var(--line);
+    font-size:12px; color:var(--muted);
+    text-align:center;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="brand"><span class="dot"></span>CX DIAGNOSTIC v1.0</div>
+
+  <!-- ============== TOP SCREEN ============== -->
+  <section id="screen-top" class="screen active">
+    <div class="hero">
+      <span class="tag">中小企業オーナー向け｜無料・3分</span>
+      <h1>あなたの会社のCXは、<br /><span class="glitch">もう崩壊している</span>かもしれない。</h1>
+      <p class="lead">
+        顧客は黙って去っていく。<br />
+        5つの質問で、あなたの会社の「顧客体験（CX）崩壊度」を可視化します。
+      </p>
+
+      <div class="stats">
+        <div class="stat"><div class="num">5問</div><div class="lbl">QUESTIONS</div></div>
+        <div class="stat"><div class="num">3分</div><div class="lbl">MINUTES</div></div>
+        <div class="stat"><div class="num">¥0</div><div class="lbl">FREE</div></div>
+      </div>
+
+      <div class="cta-row">
+        <button class="btn btn-primary" onclick="startQuiz()">診断をはじめる →</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('about').scrollIntoView({behavior:'smooth'})">この診断について</button>
+      </div>
+      <div class="meta">※ 個人情報の入力は不要。結果はその場で表示されます。</div>
+    </div>
+
+    <div class="features" id="about">
+      <div class="feature">
+        <div class="ic" style="color:var(--neon-cyan)">◉</div>
+        <div class="ttl">5つの観点で診断</div>
+        <div class="desc">顧客理解／接点品質／約束遵守／一貫性／改善体質の5軸でCXを評価。</div>
+      </div>
+      <div class="feature">
+        <div class="ic" style="color:var(--neon-pink)">▲</div>
+        <div class="ttl">崩壊度ランクを判定</div>
+        <div class="desc">「健全」「注意」「危険」「崩壊」の4段階で、あなたの状態を可視化。</div>
+      </div>
+      <div class="feature">
+        <div class="ic" style="color:var(--neon-purple)">⬢</div>
+        <div class="ttl">改善アクションを提案</div>
+        <div class="desc">レーダーチャートと、明日から実行できる具体的な打ち手をお届け。</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== QUESTION SCREEN ============== -->
+  <section id="screen-quiz" class="screen">
+    <div class="progress-wrap">
+      <div class="progress-meta">
+        <span>Q<span id="q-cur">1</span> / <span id="q-total">5</span></span>
+        <span id="q-pct">20%</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+    </div>
+
+    <div class="qcard">
+      <span class="qcat" id="q-cat">CATEGORY</span>
+      <div class="qtext" id="q-text">質問テキスト</div>
+      <div class="options" id="options"></div>
+      <div class="qnav">
+        <button class="btn btn-secondary" id="btn-back" onclick="prevQ()">← 戻る</button>
+        <button class="btn btn-primary" id="btn-next" onclick="nextQ()" disabled style="opacity:.4;cursor:not-allowed">次へ →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== RESULT SCREEN ============== -->
+  <section id="screen-result" class="screen">
+    <div class="result-hero">
+      <div class="rank-label">あなたのCX崩壊度ランク</div>
+      <div class="rank" id="rank-name">—</div>
+      <div class="score-big"><span id="score-num">0</span><span class="score-unit">/100</span></div>
+      <div class="score-bar"></div>
+      <div class="score-marker"><div class="pin" id="score-pin" style="left:0%"></div></div>
+      <div class="scale-row"><span>健全</span><span>注意</span><span>危険</span><span>崩壊</span></div>
+      <div class="verdict" id="verdict-text">—</div>
+    </div>
+
+    <div class="grid-2">
+      <div class="panel">
+        <h3>カテゴリ別レーダー</h3>
+        <div class="sub">5軸で見る、あなたの会社のCX輪郭。外側ほど崩壊度が高い。</div>
+        <div class="chart-box"><canvas id="radar"></canvas></div>
+      </div>
+      <div class="panel">
+        <h3>改善アクション提案</h3>
+        <div class="sub">スコアに応じた、明日からの3ステップ。</div>
+        <ul class="actions-list" id="actions-list"></ul>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:18px">
+      <h3>結果をシェアする</h3>
+      <div class="sub">同じ悩みを持つオーナー仲間にも届けよう。</div>
+      <div class="share-row">
+        <a class="share-btn" id="share-x" target="_blank" rel="noopener">X（Twitter）でシェア</a>
+        <a class="share-btn" id="share-fb" target="_blank" rel="noopener">Facebookでシェア</a>
+        <a class="share-btn" id="share-line" target="_blank" rel="noopener">LINEでシェア</a>
+        <button class="share-btn" onclick="copyURL(this)">URLをコピー</button>
+      </div>
+    </div>
+
+    <div class="cta-final">
+      <h3>診断結果の詳しい改善プランが必要ですか？</h3>
+      <p>無料の個別相談で、あなたの会社専用のCX再構築ロードマップを一緒に作ります。</p>
+      <div class="cta-row" style="justify-content:center">
+        <button class="btn btn-pink" onclick="alert('お問い合わせフォームへ遷移します（実装ではURLに置き換えてください）')">無料相談を予約する</button>
+        <button class="btn btn-secondary" onclick="restart()">もう一度診断する</button>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    © CX Diagnostic — Made for SMB owners. ※ 本診断は簡易セルフチェックです。
+  </footer>
+</div>
+
+<script>
+/* ===== 設問データ ===== */
+const QUESTIONS = [
+  {
+    cat: "顧客理解力",
+    text: "直近3ヶ月で「顧客の生の声」を何件聞きましたか？",
+    options: [
+      { label: "週1回以上、定期的に直接ヒアリングしている", score: 0 },
+      { label: "月1〜2回、思い出した時に聞いている",       score: 1 },
+      { label: "アンケートなど、間接的にしか把握していない", score: 2 },
+      { label: "ほぼ聞いていない／クレーム時のみ",         score: 3 }
+    ]
+  },
+  {
+    cat: "接点品質",
+    text: "顧客からの問い合わせに、初回返信は何時間以内ですか？",
+    options: [
+      { label: "1時間以内には必ず一次返信している",   score: 0 },
+      { label: "営業時間内なら半日〜1日以内",         score: 1 },
+      { label: "2〜3日かかることもある",               score: 2 },
+      { label: "正直、放置気味／対応者がいない",       score: 3 }
+    ]
+  },
+  {
+    cat: "約束遵守度",
+    text: "自社が顧客に約束したこと（納期・品質・対応）は守れていますか？",
+    options: [
+      { label: "ほぼ100%守っている。期待を超える時もある", score: 0 },
+      { label: "9割は守れているが、たまに遅延がある",       score: 1 },
+      { label: "半分くらい。遅延や品質ブレがある",         score: 2 },
+      { label: "正直、約束自体が曖昧で守れていない",       score: 3 }
+    ]
+  },
+  {
+    cat: "一貫性",
+    text: "誰が顧客対応しても「同じ品質・同じ印象」を提供できていますか？",
+    options: [
+      { label: "マニュアルと教育で、誰でも同じ対応ができる",     score: 0 },
+      { label: "おおむね統一されているが、人による差はある",     score: 1 },
+      { label: "属人化していて、担当者で大きく差が出る",         score: 2 },
+      { label: "対応はほぼ個人任せ。基準が存在しない",           score: 3 }
+    ]
+  },
+  {
+    cat: "改善体質",
+    text: "顧客からのフィードバックを、サービスや業務の改善に活かしていますか？",
+    options: [
+      { label: "毎月レビューし、具体的な改善に反映している",   score: 0 },
+      { label: "重要な意見は取り上げて、不定期に改善している", score: 1 },
+      { label: "聞いてはいるが、具体的な改善には繋がっていない", score: 2 },
+      { label: "改善する仕組み自体がない",                     score: 3 }
+    ]
+  }
+];
+
+/* ===== 状態 ===== */
+let currentQ = 0;
+const answers = new Array(QUESTIONS.length).fill(null);
+
+/* ===== 画面遷移 ===== */
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function startQuiz(){
+  currentQ = 0;
+  answers.fill(null);
+  show('screen-quiz');
+  renderQ();
+}
+
+/* ===== 質問描画 ===== */
+function renderQ(){
+  const q = QUESTIONS[currentQ];
+  document.getElementById('q-cur').textContent = currentQ + 1;
+  document.getElementById('q-total').textContent = QUESTIONS.length;
+  const pct = Math.round(((currentQ) / QUESTIONS.length) * 100);
+  const fillPct = Math.round(((currentQ + 1) / QUESTIONS.length) * 100);
+  document.getElementById('q-pct').textContent = fillPct + '%';
+  document.getElementById('progress-fill').style.width = fillPct + '%';
+  document.getElementById('q-cat').textContent = q.cat.toUpperCase();
+  document.getElementById('q-text').textContent = q.text;
+
+  const optsEl = document.getElementById('options');
+  optsEl.innerHTML = '';
+  q.options.forEach((o, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt' + (answers[currentQ] === i ? ' selected' : '');
+    btn.innerHTML = `<span class="pill">${String.fromCharCode(65+i)}</span><span>${o.label}</span>`;
+    btn.onclick = () => selectOpt(i);
+    optsEl.appendChild(btn);
+  });
+
+  document.getElementById('btn-back').style.visibility = currentQ === 0 ? 'hidden' : 'visible';
+  const nextBtn = document.getElementById('btn-next');
+  if (answers[currentQ] === null){
+    nextBtn.disabled = true;
+    nextBtn.style.opacity = .4;
+    nextBtn.style.cursor = 'not-allowed';
+    nextBtn.textContent = '次へ →';
+  } else {
+    nextBtn.disabled = false;
+    nextBtn.style.opacity = 1;
+    nextBtn.style.cursor = 'pointer';
+    nextBtn.textContent = currentQ === QUESTIONS.length - 1 ? '結果を見る →' : '次へ →';
+  }
+}
+
+function selectOpt(i){
+  answers[currentQ] = i;
+  renderQ();
+}
+
+function nextQ(){
+  if (answers[currentQ] === null) return;
+  if (currentQ < QUESTIONS.length - 1){
+    currentQ++;
+    renderQ();
+  } else {
+    showResult();
+  }
+}
+function prevQ(){
+  if (currentQ > 0){ currentQ--; renderQ(); }
+}
+
+/* ===== 結果計算 ===== */
+function calc(){
+  // each Q max 3 points, 5Qs => max 15. Higher = more collapsed.
+  const perCat = QUESTIONS.map((q,i) => {
+    const pts = q.options[answers[i]].score;
+    return Math.round((pts / 3) * 100); // 0..100 collapse per category
+  });
+  const totalPts = QUESTIONS.reduce((s,q,i)=> s + q.options[answers[i]].score, 0);
+  const totalScore = Math.round((totalPts / (QUESTIONS.length * 3)) * 100);
+  return { perCat, totalScore };
+}
+
+function rankOf(score){
+  if (score <= 25) return {
+    name: "健全",
+    color: "var(--ok)",
+    verdict: "あなたの会社のCXは安定運用中。顧客との信頼関係が築けており、強みを伸ばす段階です。さらに上を目指して、CXの仕組みを言語化していきましょう。"
+  };
+  if (score <= 50) return {
+    name: "注意",
+    color: "var(--warn)",
+    verdict: "兆候が出始めています。今すぐ大きな問題はなくても、小さな綻びが顧客離れに繋がる前兆かもしれません。弱点カテゴリから手を打ちましょう。"
+  };
+  if (score <= 75) return {
+    name: "危険",
+    color: "#ff9550",
+    verdict: "顧客はすでに不満を抱えている可能性が高い状態です。早急な改善が必要。優先順位をつけて、最も崩壊しているカテゴリから着手してください。"
+  };
+  return {
+    name: "崩壊",
+    color: "var(--danger)",
+    verdict: "緊急事態です。顧客が静かに離れていっている可能性が極めて高い状況。まずは「顧客の声を聞く」ところから、CXを再構築する必要があります。"
+  };
+}
+
+/* ===== レーダーチャート ===== */
+let radarChart = null;
+function drawRadar(perCat){
+  const ctx = document.getElementById('radar').getContext('2d');
+  if (radarChart) radarChart.destroy();
+  radarChart = new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels: QUESTIONS.map(q => q.cat),
+      datasets: [{
+        label: '崩壊度',
+        data: perCat,
+        backgroundColor: 'rgba(255, 45, 117, .25)',
+        borderColor: 'rgba(255, 45, 117, 1)',
+        borderWidth: 2,
+        pointBackgroundColor: '#00ffd1',
+        pointBorderColor: '#fff',
+        pointHoverRadius: 6,
+        pointRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        r: {
+          min: 0, max: 100,
+          ticks: { stepSize: 25, color: '#8b8ba8', backdropColor: 'transparent', font:{size:10} },
+          grid: { color: 'rgba(255,255,255,.08)' },
+          angleLines: { color: 'rgba(0,255,209,.18)' },
+          pointLabels: { color: '#eef0ff', font: { size: 12, family: 'Hiragino Sans, sans-serif' } }
+        }
+      }
+    }
+  });
+}
+
+/* ===== 改善アクション ===== */
+const ACTION_LIB = {
+  "顧客理解力": [
+    "毎週金曜の30分を「顧客の声タイム」として固定する",
+    "直近1ヶ月で対応した顧客5名にヒアリング電話をかける",
+    "アンケートに「もっと改善してほしい点」を1問だけ追加する"
+  ],
+  "接点品質": [
+    "問い合わせ受付ルールを明文化（◯時間以内に一次返信）",
+    "問い合わせ窓口を1つに集約（散在を解消）",
+    "FAQをWebに掲載し、自己解決率を高める"
+  ],
+  "約束遵守度": [
+    "自社が顧客に何を約束しているか1枚紙にまとめる",
+    "守れない可能性が出た時点で「先回り連絡」するルール化",
+    "納期や品質基準をWebサイト・契約書に明記する"
+  ],
+  "一貫性": [
+    "顧客対応の「これだけは守る5箇条」を作って共有する",
+    "新人OJTに先輩のロープレ動画を1本準備する",
+    "対応履歴を共有ツール（Slack/Notion等）に集約する"
+  ],
+  "改善体質": [
+    "月1回、顧客フィードバック振り返り30分会議を設定",
+    "改善案を「やる/やらない」で必ず判断＆理由を残す",
+    "実施した改善を顧客に伝える（メール・SNS・店頭等）"
+  ]
+};
+
+function buildActions(perCat){
+  // 上位3つの「崩壊カテゴリ」に対して施策を1つずつ提案
+  const ranked = QUESTIONS.map((q,i) => ({cat:q.cat, score:perCat[i]}))
+    .sort((a,b) => b.score - a.score);
+  const top = ranked.slice(0, 3);
+  return top.map((t,i) => {
+    const sevClass = t.score >= 67 ? 'danger' : t.score >= 34 ? 'warn' : '';
+    const sevLabel = t.score >= 67 ? '【最優先】' : t.score >= 34 ? '【要対応】' : '【強化】';
+    const lib = ACTION_LIB[t.cat] || [];
+    const idx = i % lib.length;
+    return {
+      cat: t.cat,
+      score: t.score,
+      sevClass, sevLabel,
+      title: `${t.cat}を立て直す`,
+      desc: lib[idx] || '改善計画を作成しましょう。'
+    };
+  });
+}
+
+function renderActions(actions){
+  const ul = document.getElementById('actions-list');
+  ul.innerHTML = '';
+  actions.forEach((a, i) => {
+    const li = document.createElement('li');
+    li.className = 'action ' + a.sevClass;
+    li.innerHTML = `
+      <div class="num">STEP ${i+1} ${a.sevLabel} 崩壊度 ${a.score}/100</div>
+      <div class="ttl">${a.title}</div>
+      <div class="desc">${a.desc}</div>
+    `;
+    ul.appendChild(li);
+  });
+}
+
+/* ===== シェア ===== */
+function setupShare(score, rankName){
+  const url = location.href.split('?')[0].split('#')[0];
+  const text = `私の会社のCX崩壊度は ${score}/100 「${rankName}」でした。あなたの会社のCXは大丈夫？ #CX崩壊度診断`;
+  document.getElementById('share-x').href  = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+  document.getElementById('share-fb').href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+  document.getElementById('share-line').href = `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
+}
+function copyURL(btn){
+  navigator.clipboard.writeText(location.href).then(()=>{
+    const orig = btn.textContent;
+    btn.textContent = '✓ コピーしました';
+    setTimeout(()=>{ btn.textContent = orig; }, 1800);
+  }).catch(()=>{ alert('URLのコピーに失敗しました'); });
+}
+
+/* ===== 結果画面表示 ===== */
+function showResult(){
+  const { perCat, totalScore } = calc();
+  const r = rankOf(totalScore);
+  document.getElementById('rank-name').textContent = r.name;
+  document.getElementById('rank-name').style.background = '';
+  document.getElementById('verdict-text').textContent = r.verdict;
+
+  // animate score
+  const scoreEl = document.getElementById('score-num');
+  let v = 0; const target = totalScore;
+  const step = Math.max(1, Math.round(target / 30));
+  const tick = setInterval(()=>{
+    v += step;
+    if (v >= target){ v = target; clearInterval(tick); }
+    scoreEl.textContent = v;
+  }, 24);
+
+  document.getElementById('score-pin').style.left = totalScore + '%';
+
+  show('screen-result');
+  setTimeout(()=> drawRadar(perCat), 60);
+  renderActions(buildActions(perCat));
+  setupShare(totalScore, r.name);
+}
+
+function restart(){
+  show('screen-top');
+  currentQ = 0;
+  answers.fill(null);
+}
+</script>
+</body>
+</html>
